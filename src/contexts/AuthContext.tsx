@@ -1,10 +1,19 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface UserProfile {
+  id: string;
+  nome: string;
+  email: string;
+  tipo: 'admin' | 'funcionario' | 'aluno';
+}
 
 interface AuthContextType {
   user: User | null;
-  userProfile: any | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, userData: any) => Promise<any>;
@@ -24,46 +33,132 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulação de autenticação - será substituído pela integração Supabase
-    const checkAuth = async () => {
-      try {
-        // Aqui será implementada a verificação real do Supabase
-        setLoading(false);
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
         setLoading(false);
       }
-    };
+    });
 
-    checkAuth();
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar perfil:', error);
+        return;
+      }
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
-    // Implementação do login com Supabase
-    console.log('Login:', email);
-    return { error: null };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+
+      toast.success('Login realizado com sucesso!');
+      return { data };
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast.error('Erro interno do servidor');
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
-    // Implementação do cadastro com Supabase
-    console.log('Cadastro:', email, userData);
-    return { error: null };
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: userData.nome,
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+
+      toast.success('Cadastro realizado com sucesso! Verifique seu email.');
+      return { data };
+    } catch (error) {
+      console.error('Erro no cadastro:', error);
+      toast.error('Erro interno do servidor');
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    // Implementação do logout com Supabase
-    setUser(null);
-    setUserProfile(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success('Logout realizado com sucesso!');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      toast.error('Erro interno do servidor');
+    }
   };
 
   const resetPassword = async (email: string) => {
-    // Implementação da recuperação de senha com Supabase
-    console.log('Recuperação de senha:', email);
-    return { error: null };
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        toast.error(error.message);
+        return { error };
+      }
+      toast.success('Email de recuperação enviado!');
+      return { error: null };
+    } catch (error) {
+      console.error('Erro na recuperação:', error);
+      toast.error('Erro interno do servidor');
+      return { error };
+    }
   };
 
   const value = {
