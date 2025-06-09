@@ -6,15 +6,15 @@ Um sistema completo e moderno para gerenciamento de academias, desenvolvido com 
 ## 🖼️ Capturas de Tela
 
 ### Gestão de Alunos
-![Tela de Alunos](/lovable-uploads/c84f9e28-ca3d-487e-95e5-d713a027e840.png)
+![Tela de Alunos](public/lovable-uploads/c84f9e28-ca3d-487e-95e5-d713a027e840.png)
 *Interface para visualização e gerenciamento de todos os alunos cadastrados*
 
 ### Gestão de Funcionários
-![Tela de Funcionários](/lovable-uploads/95f489dd-57a0-4c57-a2e0-0142d1635f9e.png)
+![Tela de Funcionários](public/lovable-uploads/95f489dd-57a0-4c57-a2e0-0142d1635f9e.png)
 *Sistema completo para controle da equipe e folha de pagamento*
 
 ### Controle de Pagamentos
-![Tela de Pagamentos](/lovable-uploads/f0ab7335-c9c0-4987-9542-515b8856ffd3.png)
+![Tela de Pagamentos](public/lovable-uploads/f0ab7335-c9c0-4987-9542-515b8856ffd3.png)
 *Dashboard financeiro com métricas e histórico de pagamentos*
 
 ## 🚀 Funcionalidades
